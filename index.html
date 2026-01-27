@@ -6,34 +6,139 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
-    body { font-family: Arial; background:#f2f2f2; padding:10px }
-    h2 { text-align:center }
-
-    select, button {
-      width:100%; padding:10px; margin-bottom:10px; font-size:16px;
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      background:#f2f2f2;
+      padding:10px;
+      margin:0;
     }
 
-    button {
-      background:#0d6efd; color:white; border:none; border-radius:6px;
+    h2{
+      text-align:center;
+      margin:10px 0 15px 0;
     }
 
-    table { width:100%; border-collapse:collapse; font-size:14px }
-    th, td { border:1px solid #ccc; padding:6px; text-align:center }
-    th { background:#333; color:white; position:sticky; top:0 }
+    h3{
+      text-align:center;
+      margin:0 0 8px 0;
+      font-size:16px;
+    }
 
-    .manana { background:#e7f1ff }
-    .tarde { background:#fff1e0 }
-    .descanso { background:#f8d7da; font-weight:bold }
-    .largo { border-left:6px solid #ffc107; font-weight:bold }
+    select, button{
+      width:100%;
+      padding:8px;
+      margin-bottom:8px;
+      font-size:14px;
+      border-radius:6px;
+    }
 
-    .card { background:white; padding:10px; border-radius:6px; margin-top:10px }
+    button{
+      background:#0d6efd;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
+
+    button:hover{
+      background:#0b5ed7;
+    }
+
+    /* ===== CARD ===== */
+
+    .card{
+      background:white;
+      padding:10px;
+      border-radius:8px;
+      box-shadow:0 2px 6px rgba(0,0,0,.08);
+      margin-bottom:12px;
+    }
+
+    /* ===== CARD DESCANSOS ===== */
+
+    .card-descansos{
+      max-width:420px;
+      margin:0 auto 12px auto;
+    }
+
+    .tabla-descansos{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+
+    .tabla-descansos th{
+      background:#0d6efd;
+      color:white;
+      padding:6px;
+    }
+
+    .tabla-descansos td{
+      padding:6px;
+      border:1px solid #ddd;
+    }
+
+    .tabla-descansos select{
+      width:100%;
+      padding:4px 6px;
+      font-size:13px;
+      border-radius:4px;
+    }
+
+    /* ===== TABLA HORARIO ===== */
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+
+    th, td{
+      border:1px solid #ccc;
+      padding:5px;
+      text-align:center;
+    }
+
+    th{
+      background:#333;
+      color:white;
+      position:sticky;
+      top:0;
+    }
+
+    .manana{ background:#e7f1ff }
+    .tarde{ background:#fff1e0 }
+    .descanso{ background:#f8d7da; font-weight:bold }
+    .largo{ border-left:5px solid #ffc107; font-weight:bold }
+
+    /* ===== RESPONSIVE ===== */
+
+    @media (max-width:600px){
+      h2{ font-size:18px }
+      table{ font-size:12px }
+    }
   </style>
 </head>
 
-<body>
+<body onload="cargarTablaDescansos()">
 
 <h2>Horario Semanal de Tienda</h2>
 
+<!-- DESCANSOS -->
+<div class="card card-descansos">
+  <h3>Descansos</h3>
+
+  <table class="tabla-descansos">
+    <thead>
+      <tr>
+        <th>Empleado</th>
+        <th>Día</th>
+      </tr>
+    </thead>
+    <tbody id="tablaDescansos"></tbody>
+  </table>
+</div>
+
+<!-- FILTRO -->
 <select id="filtroDia" onchange="filtrarDia()">
   <option value="Todos">Todos</option>
   <option>Lunes</option>
@@ -45,22 +150,31 @@
   <option>Domingo</option>
 </select>
 
+<!-- BOTÓN -->
 <button onclick="generarSemana()">Generar semana</button>
 
-<div style="overflow-x:auto">
-<table>
-  <thead>
-    <tr>
-      <th>Día</th>
-      <th>Nombre</th>
-      <th>Cargo</th>
-      <th>Categoría</th>
-      <th>Turno</th>
-      <th>Hora Inicio</th>
-      <th>Hora Fin</th>
-      <th>Horas</th>
-    </tr>
-  </thead>
-  <tbody id="tabla"></tbody>
-</table>
+<!-- TABLA HORARIO -->
+<div class="card" style="overflow-x:auto">
+  <table>
+    <thead>
+      <tr>
+        <th>Día</th>
+        <th>Nombre</th>
+        <th>Cargo</th>
+        <th>Categoría</th>
+        <th>Turno</th>
+        <th>Hora Inicio</th>
+        <th>Hora Fin</th>
+        <th>Horas</th>
+      </tr>
+    </thead>
+    <tbody id="tabla"></tbody>
+  </table>
+</div>
 
+<!-- RESUMEN -->
+<div id="resumen" class="card"></div>
+
+<script src="./logic.js"></script>
+</body>
+</html>
