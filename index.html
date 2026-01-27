@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Horario Semanal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body { font-family: Arial; background:#f2f2f2; padding:10px }
+    h2 { text-align:center }
+
+    select, button {
+      width:100%; padding:10px; margin-bottom:10px; font-size:16px;
+    }
+
+    button {
+      background:#0d6efd; color:white; border:none; border-radius:6px;
+    }
+
+    table { width:100%; border-collapse:collapse; font-size:14px }
+    th, td { border:1px solid #ccc; padding:6px; text-align:center }
+    th { background:#333; color:white; position:sticky; top:0 }
+
+    .manana { background:#e7f1ff }
+    .tarde { background:#fff1e0 }
+    .descanso { background:#f8d7da; font-weight:bold }
+    .largo { border-left:6px solid #ffc107; font-weight:bold }
+
+    .card { background:white; padding:10px; border-radius:6px; margin-top:10px }
+  </style>
+</head>
+
+<body>
+
+<h2>Horario Semanal de Tienda</h2>
+
+<select id="filtroDia" onchange="filtrarDia()">
+  <option value="Todos">Todos</option>
+  <option>Lunes</option>
+  <option>Martes</option>
+  <option>Miércoles</option>
+  <option>Jueves</option>
+  <option>Viernes</option>
+  <option>Sábado</option>
+  <option>Domingo</option>
+</select>
+
+<button onclick="generarSemana()">Generar semana</button>
+
+<div style="overflow-x:auto">
+<table>
+  <thead>
+    <tr>
+      <th>Día</th>
+      <th>Nombre</th>
+      <th>Cargo</th>
+      <th>Categoría</th>
+      <th>Turno</th>
+      <th>Hora Inicio</th>
+      <th>Hora Fin</th>
+      <th>Horas</th>
+    </tr>
+  </thead>
+  <tbody id="tabla"></tbody>
+</table>
+</div>
+
+<div id="resumen" class="card"></div>
+
+<script src="./logic.js"></script>
+</body>
+</html>
