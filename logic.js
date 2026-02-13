@@ -1,7 +1,3 @@
-console.log("logic.js OK");
-
-// ================= DATOS BASE =================
-
 var EMPLEADOS = [
   { nombre:"Margarita", rol:"Supervisora", tipo:"Full time" },
   { nombre:"Nixabelid", rol:"Asistente", tipo:"Full time" },
@@ -24,12 +20,10 @@ var DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"
 
 // ================= HORAS =================
 
-// Full time → 44 / 6 días
-var HORAS_FULL = 44 / 6; // 7.33
+var HORAS_FULL = 44 / 6; 
 
-// Part time
-var HORAS_PART_DOMINGO = 44 / 6; // 7.33
-var HORAS_PART_SEMANA = (36 - HORAS_PART_DOMINGO) / 5; // 5.73
+var HORAS_PART_DOMINGO = 44 / 6;
+var HORAS_PART_SEMANA = (36 - HORAS_PART_DOMINGO) / 5;
 
 var TOPE = { 
   "Full time":44, 
@@ -92,7 +86,7 @@ function esTarde(t){ return t==="TARDE"; }
 function generarSemana(){
 
   if(!validarDescansos()){
-    alert("⚠️ Debes asignar todos los descansos");
+    alert("Debes asignar todos los descansos");
     return;
   }
 
@@ -180,7 +174,7 @@ function generarSemana(){
       });
     });
 
-    // -------- RENDER --------
+    
     regs.forEach(r=>{
       let cls = r.turno==="DESCANSO"
         ? "descanso"
