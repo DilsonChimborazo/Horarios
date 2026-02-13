@@ -11,17 +11,17 @@ var EMPLEADOS = [
 
 var DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 
-// Horas semanales
-var HORAS_FULL = 44 / 6;              // 7h20 por día
-var HORAS_PART_DOM = 44 / 6;          // 7h20 domingo
-var HORAS_PART_SEM = (36 - HORAS_PART_DOM) / 5; // resto semana
+// Horas por día
+var HORAS_FULL = 44 / 6;                  
+var HORAS_PART_DOM = 44 / 6;              
+var HORAS_PART_SEM = (36 - HORAS_PART_DOM) / 5;
 
 var TOPE = {
   "Full time":44,
   "Part time":36
 };
 
-// ================= FUNCION PARA SUMAR O RESTAR HORAS =================
+// ================= FUNCION PARA SUMAR / RESTAR HORAS =================
 
 function moverHora(hora, horas){
   let [h,m] = hora.split(":").map(Number);
@@ -70,29 +70,33 @@ function generarSemana(){
 
   let horas = {};
 
-  DIAS.forEach(dia=>{
+  // Obtener solo full time
+  let fullTimes = EMPLEADOS.filter(e => e.tipo==="Full time");
 
-    let full7Asignado = false;
+  DIAS.forEach((dia, indexDia)=>{
+
+    // 🔁 Rotación automática del que abre
+    let indiceApertura = indexDia % fullTimes.length;
+    let nombreApertura = fullTimes[indiceApertura].nombre;
 
     EMPLEADOS.forEach((emp,i)=>{
 
       let inicio="", fin="", h=0;
 
-      // Descanso
+      // ================= DESCANSO =================
       if(DESCANSOS_CONFIG[emp.nombre] === dia){
         h = 0;
       }
 
-      // Full time
+      // ================= FULL TIME =================
       else if(emp.tipo==="Full time"){
 
         h = HORAS_FULL;
 
-        // Garantizar uno a las 7
-        if(!full7Asignado){
+        // El que rota abre a las 7
+        if(emp.nombre === nombreApertura){
           inicio="07:00";
           fin=moverHora(inicio,h);
-          full7Asignado=true;
         }
         else{
           if(i%2===0){
@@ -105,20 +109,22 @@ function generarSemana(){
         }
       }
 
-      // Part time
+      // ================= PART TIME =================
       else{
 
         if(dia==="Domingo"){
           h = HORAS_PART_DOM;
           inicio="08:00";
           fin=moverHora(inicio,h);
-        }else{
+        }
+        else{
           h = HORAS_PART_SEM;
 
           if(i%2===0){
             inicio="08:00";
             fin=moverHora(inicio,h);
-          }else{
+          }
+          else{
             fin="22:00";
             inicio=moverHora(fin,-h);
           }
@@ -134,9 +140,8 @@ function generarSemana(){
         h=0;
       }
 
-      horas[emp.nombre]+=h;
+      horas[emp.nombre] += h;
 
-      // Render fila
       let turno = h===0 ? "DESCANSO" : (inicio < "12:00" ? "Mañana" : "Tarde");
       let clase = h===0 ? "descanso" : (inicio < "12:00" ? "manana" : "tarde");
 
