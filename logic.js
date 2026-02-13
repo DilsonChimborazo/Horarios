@@ -22,20 +22,31 @@ var CARGO_VISIBLE = {
 
 var DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
 
-var TURNOS = {
-  MAÑANA:["07:00","14:30",7],
-  MAÑANA_LARGA:["06:00","14:30",8],
-  TARDE:["14:30","22:00",7],
-  TARDE_LARGA:["13:30","22:00",8],
-  PART_M:["07:00","13:30",6],
-  PART_T:["15:30","22:00",6],
-  PEDIDOS:["06:00","14:30",8],
-  DESCANSO:["","",0]
+// ================= HORAS =================
+
+// Full time → 44 / 6 días
+var HORAS_FULL = 44 / 6; // 7.33
+
+// Part time
+var HORAS_PART_DOMINGO = 44 / 6; // 7.33
+var HORAS_PART_SEMANA = (36 - HORAS_PART_DOMINGO) / 5; // 5.73
+
+var TOPE = { 
+  "Full time":44, 
+  "Part time":36
 };
 
-var TOPE = { "Full time":44, "Part time":36 };
+// ================= FUNCIONES DE TIEMPO =================
 
-// ================= DESCANSOS CONFIGURADOS =================
+function sumarHoras(hora, horasDecimal){
+  let [h,m] = hora.split(":").map(Number);
+  let totalMin = h*60 + m + Math.round(horasDecimal*60);
+  let nuevaH = Math.floor(totalMin/60);
+  let nuevaM = totalMin%60;
+  return `${String(nuevaH).padStart(2,"0")}:${String(nuevaM).padStart(2,"0")}`;
+}
+
+// ================= DESCANSOS =================
 
 var DESCANSOS_CONFIG = {};
 
@@ -70,122 +81,112 @@ function validarDescansos(){
 
 function nombreTurno(t){
   if(t==="DESCANSO") return "DESCANSO";
-  if(["MAÑANA","MAÑANA_LARGA","PEDIDOS","PART_M"].includes(t)) return "Mañana";
-  return "Tarde";
+  return t==="MANANA" ? "Mañana" : "Tarde";
 }
 
-function esManana(t){
-  return ["MAÑANA","MAÑANA_LARGA","PEDIDOS","PART_M"].includes(t);
-}
-
-function esTarde(t){
-  return ["TARDE","TARDE_LARGA","PART_T"].includes(t);
-}
+function esManana(t){ return t==="MANANA"; }
+function esTarde(t){ return t==="TARDE"; }
 
 // ================= GENERADOR =================
 
 function generarSemana(){
 
   if(!validarDescansos()){
-    alert("⚠️ los dia de descanso pendej@");
+    alert("⚠️ Debes asignar todos los descansos");
     return;
   }
 
   let tbody = document.getElementById("tabla");
   tbody.innerHTML = "";
 
-  let horas={}, largos={}, ultimoLargo={};
+  let horas = {};
 
   for(let d=0; d<DIAS.length; d++){
+
     let dia = DIAS[d];
-    let regs=[];
-    let largosM=0, largosT=0;
-    let pt={Jaime:"PART_M", Alejandra:"PART_T"};
+    let regs = [];
 
     EMPLEADOS.forEach((emp,i)=>{
-      let turno="";
 
-      if(dia==="Domingo"){
-        turno = emp.tipo==="Part time" ? pt[emp.nombre] : "MAÑANA";
+      let inicio="", fin="", h=0;
+
+      // DESCANSO
+      if(DESCANSOS_CONFIG[emp.nombre] === dia){
+        inicio="";
+        fin="";
+        h=0;
       }
-      else if(DESCANSOS_CONFIG[emp.nombre] === dia){
-        turno="DESCANSO";
-      }
-      else if(emp.rol==="Supervisora"){
-        turno = (dia==="Miércoles"||dia==="Viernes")?"PEDIDOS":"MAÑANA";
-      }
-      else if(emp.tipo==="Part time"){
-        turno = pt[emp.nombre];
-      }
-      else{
-        if((largos[emp.nombre]||0)<2 && ultimoLargo[emp.nombre]!==d-1 && largosM<2){
-          turno="MAÑANA_LARGA";
-          largosM++; largos[emp.nombre]=(largos[emp.nombre]||0)+1; ultimoLargo[emp.nombre]=d;
+
+      // FULL TIME
+      else if(emp.tipo==="Full time"){
+
+        h = HORAS_FULL;
+
+        // Mañanas variables
+        if(i%2===0){
+          inicio = (i%3===0) ? "07:00" : "08:00";
+          fin = sumarHoras(inicio, h);
         }
-        else if((largos[emp.nombre]||0)<2 && ultimoLargo[emp.nombre]!==d-1 && largosT<2){
-          turno="TARDE_LARGA";
-          largosT++; largos[emp.nombre]=(largos[emp.nombre]||0)+1; ultimoLargo[emp.nombre]=d;
-        }
+        // Tardes variables con salida hasta 22:00
         else{
-          turno=i%2===0?"MAÑANA":"TARDE";
+          fin = (i%3===0) ? "22:00" : "21:40";
+          inicio = sumarHoras(fin, -h);
         }
       }
 
-      let h=TURNOS[turno][2];
-      horas[emp.nombre]=horas[emp.nombre]||0;
+      // PART TIME
+      else{
 
-      if(dia!=="Domingo" && horas[emp.nombre]+h>TOPE[emp.tipo]){
-        turno="DESCANSO"; h=0;
+        // Domingo 7h20
+        if(dia==="Domingo"){
+          h = HORAS_PART_DOMINGO;
+          inicio = (i%2===0) ? "07:00" : "08:00";
+          fin = sumarHoras(inicio, h);
+        }
+        // Semana 5h44
+        else{
+          h = HORAS_PART_SEMANA;
+
+          if(i%2===0){
+            inicio = "08:00";
+            fin = sumarHoras(inicio, h);
+          }else{
+            fin = "22:00";
+            inicio = sumarHoras(fin, -h);
+          }
+        }
       }
 
-      horas[emp.nombre]+=h;
+      horas[emp.nombre] = horas[emp.nombre] || 0;
+
+      // No superar tope semanal
+      if(horas[emp.nombre] + h > TOPE[emp.tipo]){
+        inicio="";
+        fin="";
+        h=0;
+      }
+
+      horas[emp.nombre] += h;
 
       regs.push({
-        dia:dia.toLowerCase(),
-        nombre:emp.nombre,
-        cargo:CARGO_VISIBLE[emp.nombre],
-        categoria:emp.tipo,
-        turno,
-        inicio:TURNOS[turno][0],
-        fin:TURNOS[turno][1],
-        horas:h
+        dia: dia.toLowerCase(),
+        nombre: emp.nombre,
+        cargo: CARGO_VISIBLE[emp.nombre],
+        categoria: emp.tipo,
+        turno: h===0 ? "DESCANSO" : (inicio < "12:00" ? "MANANA" : "TARDE"),
+        inicio,
+        fin,
+        horas: h
       });
     });
 
-    // -------- COBERTURA --------
-    let min = dia==="Domingo" ? 3 : 2;
-
-    function contar(){
-      return {
-        m: regs.filter(r=>esManana(r.turno)).length,
-        t: regs.filter(r=>esTarde(r.turno)).length
-      };
-    }
-
-    let c = contar(), guard=0;
-
-    while((c.m<min || c.t<min) && guard<10){
-      guard++;
-
-      if(c.t<min){
-        let r = regs.find(r=>esManana(r.turno)&&r.horas===7);
-        if(r){ r.turno="TARDE"; r.inicio=TURNOS.TARDE[0]; r.fin=TURNOS.TARDE[1]; }
-      }
-
-      if(c.m<min){
-        let r = regs.find(r=>esTarde(r.turno)&&r.horas===7);
-        if(r){ r.turno="MAÑANA"; r.inicio=TURNOS.MAÑANA[0]; r.fin=TURNOS.MAÑANA[1]; }
-      }
-
-      c = contar();
-    }
-
     // -------- RENDER --------
     regs.forEach(r=>{
-      let cls=r.turno==="DESCANSO"?"descanso":esManana(r.turno)?"manana":"tarde";
-      if(r.horas===8) cls+=" largo";
+      let cls = r.turno==="DESCANSO"
+        ? "descanso"
+        : (r.turno==="MANANA" ? "manana" : "tarde");
 
-      tbody.innerHTML+=`
+      tbody.innerHTML += `
         <tr class="${cls}">
           <td>${r.dia}</td>
           <td>${r.nombre}</td>
@@ -194,17 +195,19 @@ function generarSemana(){
           <td>${nombreTurno(r.turno)}</td>
           <td>${r.inicio}</td>
           <td>${r.fin}</td>
-          <td>${r.horas}</td>
+          <td>${r.horas.toFixed(2)}</td>
         </tr>`;
     });
   }
 
   // -------- RESUMEN --------
-  let res=document.getElementById("resumen");
+  let res = document.getElementById("resumen");
   res.innerHTML="<h3>Resumen semanal</h3>";
+
   Object.keys(horas).forEach(n=>{
-    let ok=horas[n]===TOPE["Full time"]||horas[n]===TOPE["Part time"];
-    res.innerHTML+=`<p>${ok?"✅":"⚠️"} <b>${n}:</b> ${horas[n]} horas</p>`;
+    let tipo = EMPLEADOS.find(e=>e.nombre===n).tipo;
+    let ok = horas[n].toFixed(2) == TOPE[tipo];
+    res.innerHTML += `<p>${ok?"✅":"⚠️"} <b>${n}:</b> ${horas[n].toFixed(2)} horas</p>`;
   });
 }
 
