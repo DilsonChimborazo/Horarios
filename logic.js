@@ -78,7 +78,7 @@ function generarSemana(){
     let manana = 0;
     let tarde = 0;
 
-    // ================= PART TIME (NUNCA JUNTOS) =================
+    // ================= PART TIME SEPARADOS =================
     if(part.length === 2){
       asignacion[part[0].nombre] = "M";
       asignacion[part[1].nombre] = "T";
@@ -86,23 +86,20 @@ function generarSemana(){
       tarde++;
     }
 
-    // ================= FULL TIME APERTURA =================
+    // ================= APERTURA ROTATIVA =================
     let nombreApertura = null;
     if(full.length > 0){
       nombreApertura = full[contadorApertura % full.length].nombre;
       contadorApertura++;
     }
 
-    if(nombreApertura){
-      if(!asignacion[nombreApertura]){
-        asignacion[nombreApertura] = "M";
-        manana++;
-      }
+    if(nombreApertura && !asignacion[nombreApertura]){
+      asignacion[nombreApertura] = "M";
+      manana++;
     }
 
-    // ================= COMPLETAR MINIMO 2 POR TURNO =================
+    // ================= MINIMO 2 POR TURNO =================
     full.forEach(emp=>{
-
       if(asignacion[emp.nombre]) return;
 
       if(manana < 2){
@@ -115,44 +112,60 @@ function generarSemana(){
       }
     });
 
-    // ================= DOMINGO 3 Y 3 =================
-    if(dia==="Domingo"){
-      full.forEach(emp=>{
-        if(asignacion[emp.nombre]) return;
+    // ================= BALANCE GENERAL =================
+    full.forEach(emp=>{
+      if(asignacion[emp.nombre]) return;
 
-        if(manana < 3){
+      if(indexDia % 2 === 0){
+        if(manana <= tarde){
           asignacion[emp.nombre] = "M";
           manana++;
-        }
-        else{
+        } else {
           asignacion[emp.nombre] = "T";
           tarde++;
         }
-      });
-    }
-    else{
-      // Entre semana alternar balance
-      full.forEach(emp=>{
-        if(asignacion[emp.nombre]) return;
-
-        if(indexDia % 2 === 0){
-          if(manana <= tarde){
-            asignacion[emp.nombre] = "M";
-            manana++;
-          } else {
-            asignacion[emp.nombre] = "T";
-            tarde++;
-          }
+      } else {
+        if(tarde <= manana){
+          asignacion[emp.nombre] = "T";
+          tarde++;
         } else {
-          if(tarde <= manana){
-            asignacion[emp.nombre] = "T";
-            tarde++;
-          } else {
-            asignacion[emp.nombre] = "M";
-            manana++;
-          }
+          asignacion[emp.nombre] = "M";
+          manana++;
         }
-      });
+      }
+    });
+
+    // ================= REGLA FIJA MARGARITA =================
+    if(asignacion["Margarita"]){
+
+      let debeManana = ["Miércoles","Viernes","Domingo"].includes(dia);
+      let turnoActual = asignacion["Margarita"];
+
+      if(debeManana && turnoActual !== "M"){
+        // buscar full en mañana para intercambiar
+        let candidato = full.find(e =>
+          e.nombre !== "Margarita" &&
+          asignacion[e.nombre] === "M"
+        );
+
+        if(candidato){
+          asignacion["Margarita"] = "M";
+          asignacion[candidato.nombre] = "T";
+        }
+      }
+
+      if(!debeManana && turnoActual !== "T"){
+        // buscar full en tarde para intercambiar
+        let candidato = full.find(e =>
+          e.nombre !== "Margarita" &&
+          asignacion[e.nombre] === "T"
+        );
+
+        if(candidato){
+          asignacion["Margarita"] = "T";
+          asignacion[candidato.nombre] = "M";
+        }
+      }
     }
 
     // ================= RENDER =================
