@@ -55,6 +55,8 @@ function validarDescansos(){
   return EMPLEADOS.every(e => DESCANSOS_CONFIG[e.nombre]);
 }
 
+// ================= GENERADOR =================
+
 function generarSemana(){
 
   if(!validarDescansos()){
@@ -66,7 +68,6 @@ function generarSemana(){
   tbody.innerHTML = "";
 
   let horas = {};
-  let contadorApertura = 0;
 
   DIAS.forEach((dia,indexDia)=>{
 
@@ -84,18 +85,6 @@ function generarSemana(){
       asignacion[part[1].nombre] = "T";
       manana++;
       tarde++;
-    }
-
-    // ================= APERTURA ROTATIVA =================
-    let nombreApertura = null;
-    if(full.length > 0){
-      nombreApertura = full[contadorApertura % full.length].nombre;
-      contadorApertura++;
-    }
-
-    if(nombreApertura && !asignacion[nombreApertura]){
-      asignacion[nombreApertura] = "M";
-      manana++;
     }
 
     // ================= MINIMO 2 POR TURNO =================
@@ -142,12 +131,10 @@ function generarSemana(){
       let turnoActual = asignacion["Margarita"];
 
       if(debeManana && turnoActual !== "M"){
-        // buscar full en mañana para intercambiar
         let candidato = full.find(e =>
           e.nombre !== "Margarita" &&
           asignacion[e.nombre] === "M"
         );
-
         if(candidato){
           asignacion["Margarita"] = "M";
           asignacion[candidato.nombre] = "T";
@@ -155,17 +142,24 @@ function generarSemana(){
       }
 
       if(!debeManana && turnoActual !== "T"){
-        // buscar full en tarde para intercambiar
         let candidato = full.find(e =>
           e.nombre !== "Margarita" &&
           asignacion[e.nombre] === "T"
         );
-
         if(candidato){
           asignacion["Margarita"] = "T";
           asignacion[candidato.nombre] = "M";
         }
       }
+    }
+
+    // ================= APERTURA ROTATIVA ENTRE FULL TIME EN MAÑANA =================
+    let fullEnManana = full.filter(e => asignacion[e.nombre] === "M");
+    let nombreApertura = null;
+
+    if(fullEnManana.length > 0){
+      let indice = indexDia % fullEnManana.length;
+      nombreApertura = fullEnManana[indice].nombre;
     }
 
     // ================= RENDER =================
