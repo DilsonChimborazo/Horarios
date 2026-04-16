@@ -43,8 +43,12 @@ function cargarTablaDescansos(){
       <tr>
         <td>${emp.nombre}</td>
         <td>
-          <select onchange="DESCANSOS_CONFIG['${emp.nombre}']=this.value">
-            <option value="">Seleccionar</option>
+          <select id="desc1_${emp.nombre}" onchange="actualizarDescansos('${emp.nombre}')">
+            <option value="">Seleccionar 1</option>
+            ${DIAS.filter(d=>d!=="Domingo").map(d=>`<option>${d}</option>`).join("")}
+          </select>
+          <select id="desc2_${emp.nombre}" onchange="actualizarDescansos('${emp.nombre}')">
+            <option value="">Ninguno (Opcional)</option>
             ${DIAS.filter(d=>d!=="Domingo").map(d=>`<option>${d}</option>`).join("")}
           </select>
         </td>
@@ -53,8 +57,17 @@ function cargarTablaDescansos(){
   });
 }
 
+function actualizarDescansos(nombre) {
+  let v1 = document.getElementById("desc1_" + nombre).value;
+  let v2 = document.getElementById("desc2_" + nombre).value;
+  let descansos = [];
+  if (v1) descansos.push(v1);
+  if (v2 && v2 !== v1) descansos.push(v2);
+  DESCANSOS_CONFIG[nombre] = descansos;
+}
+
 function validarDescansos(){
-  return EMPLEADOS.every(e => DESCANSOS_CONFIG[e.nombre]);
+  return EMPLEADOS.every(e => DESCANSOS_CONFIG[e.nombre] && DESCANSOS_CONFIG[e.nombre].length > 0);
 }
 
 // ================= GENERADOR =================
@@ -73,7 +86,7 @@ function generarSemana(){
 
   DIAS.forEach((dia,indexDia)=>{
 
-    let disponibles = EMPLEADOS.filter(e => DESCANSOS_CONFIG[e.nombre] !== dia);
+    let disponibles = EMPLEADOS.filter(e => !(DESCANSOS_CONFIG[e.nombre] && DESCANSOS_CONFIG[e.nombre].includes(dia)));
     let full = disponibles.filter(e => e.tipo==="Full time");
     let part = disponibles.filter(e => e.tipo==="Part time");
 
@@ -81,48 +94,39 @@ function generarSemana(){
     let manana = 0;
     let tarde = 0;
 
-    // ================= PART TIME SEPARADOS =================
-    if(part.length === 2){
-      asignacion[part[0].nombre] = "M";
-      asignacion[part[1].nombre] = "T";
-      manana++;
-      tarde++;
+    let targetManana = 3;
+    let targetTarde = 3;
+    let totalActivos = disponibles.length;
+
+    if (dia === "Domingo") {
+      targetManana = 4;
+      targetTarde = 4;
+    } else {
+      if (totalActivos === 7) {
+        targetManana = indexDia % 2 === 0 ? 4 : 3;
+        targetTarde = totalActivos - targetManana;
+      } else if (totalActivos >= 8) {
+        targetManana = Math.ceil(totalActivos / 2);
+        targetTarde = totalActivos - targetManana;
+      } else {
+        targetManana = Math.ceil(totalActivos / 2);
+        if (targetManana < 3 && totalActivos === 5) targetManana = 3; // force at least 3 if possible
+        targetTarde = totalActivos - targetManana;
+      }
     }
 
-    // ================= MINIMO 2 POR TURNO =================
-    full.forEach(emp=>{
-      if(asignacion[emp.nombre]) return;
-
-      if(manana < 3){
-        asignacion[emp.nombre] = "M";
-        manana++;
-      }
-      else if(tarde < 3){
-        asignacion[emp.nombre] = "T";
-        tarde++;
-      }
-    });
-
-    // ================= BALANCE GENERAL =================
-    full.forEach(emp=>{
-      if(asignacion[emp.nombre]) return;
-
-      if(indexDia % 2 === 0){
-        if(manana <= tarde){
-          asignacion[emp.nombre] = "M";
-          manana++;
-        } else {
-          asignacion[emp.nombre] = "T";
-          tarde++;
-        }
+    let todos = [...part, ...full];
+    todos.forEach((emp, i) => {
+      if (manana < targetManana && tarde < targetTarde) {
+         if (i % 2 === 0) {
+             asignacion[emp.nombre] = "M"; manana++;
+         } else {
+             asignacion[emp.nombre] = "T"; tarde++;
+         }
+      } else if (manana < targetManana) {
+          asignacion[emp.nombre] = "M"; manana++;
       } else {
-        if(tarde <= manana){
-          asignacion[emp.nombre] = "T";
-          tarde++;
-        } else {
-          asignacion[emp.nombre] = "M";
-          manana++;
-        }
+          asignacion[emp.nombre] = "T"; tarde++;
       }
     });
 
@@ -169,17 +173,19 @@ function generarSemana(){
 
       let inicio="", fin="", h=0;
 
-      if(DESCANSOS_CONFIG[emp.nombre] === dia){
+      if(DESCANSOS_CONFIG[emp.nombre] && DESCANSOS_CONFIG[emp.nombre].includes(dia)){
         h=0;
       }
       else{
 
         let turno = asignacion[emp.nombre];
+        let numDescansos = (DESCANSOS_CONFIG[emp.nombre] || []).length;
+        let diasTrabaja = 7 - numDescansos;
 
         if(emp.tipo==="Full time"){
-          h = HORAS_FULL;
+          h = 44 / diasTrabaja;
         } else {
-          h = dia==="Domingo" ? HORAS_PART_DOM : HORAS_PART_SEM;
+          h = dia==="Domingo" ? (44 / 6) : ((36 - (44 / 6)) / (diasTrabaja - 1));
         }
 
         if(turno==="M"){
