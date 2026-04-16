@@ -146,17 +146,6 @@ function generarSemana(){
           asignacion[candidato.nombre] = "T";
         }
       }
-
-      if(!debeManana && turnoActual !== "T"){
-        let candidato = full.find(e =>
-          e.nombre !== "Margarita" &&
-          asignacion[e.nombre] === "T"
-        );
-        if(candidato){
-          asignacion["Margarita"] = "T";
-          asignacion[candidato.nombre] = "M";
-        }
-      }
     }
 
     // ================= APERTURA ROTATIVA ENTRE FULL TIME EN MAÑANA =================
