@@ -105,10 +105,14 @@
       top:0;
     }
 
-    .manana{ background:#e7f1ff }
-    .tarde{ background:#fff1e0 }
-    .descanso{ background:#f8d7da; font-weight:bold }
-    .largo{ border-left:5px solid #ffc107; font-weight:bold }
+    .manana{ background:#a3cefa; }
+    .tarde{ background:#ffe082; }
+    .descanso{ background:#ff9999; font-weight:bold; color:#fff; }
+    .largo{ border-left:5px solid #ffc107; font-weight:bold; }
+
+    .separador-dia td {
+      border-top: 5px solid #000000 !important;
+    }
 
     /* ===== RESPONSIVE ===== */
 
@@ -126,6 +130,7 @@
 <!-- DESCANSOS -->
 <div class="card card-descansos">
   <h3>Descansos</h3>
+  <button onclick="asignarDescansosAzar()" style="background:#198754; font-weight:bold; margin-bottom: 12px;">🎲 Asignar Descansos al Azar</button>
 
   <table class="tabla-descansos">
     <thead>
