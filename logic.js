@@ -1,12 +1,14 @@
 // ================= DATOS =================
 
 var EMPLEADOS = [
-  { nombre:"Margarita", tipo:"Full time" },
+  { nombre:"Sonia", tipo:"Part time" },
   { nombre:"Nixabelid", tipo:"Full time" },
   { nombre:"Laura", tipo:"Full time" },
   { nombre:"Venus", tipo:"Full time" },
   { nombre:"Jaime", tipo:"Part time" },
-  { nombre:"Alejandra", tipo:"Part time" }
+  { nombre:"Alejandra", tipo:"Part time" },
+  { nombre:"Zahira", tipo:"Part time" },
+  { nombre:"Margarita", tipo:"Full time"}
 ];
 
 var DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
