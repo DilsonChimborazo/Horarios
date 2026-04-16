@@ -93,11 +93,11 @@ function generarSemana(){
     full.forEach(emp=>{
       if(asignacion[emp.nombre]) return;
 
-      if(manana < 2){
+      if(manana < 3){
         asignacion[emp.nombre] = "M";
         manana++;
       }
-      else if(tarde < 2){
+      else if(tarde < 3){
         asignacion[emp.nombre] = "T";
         tarde++;
       }
